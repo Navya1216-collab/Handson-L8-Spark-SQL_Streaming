@@ -1,139 +1,178 @@
-# Ride Sharing Analytics Using Spark Streaming and Spark SQL.
----
-## **Prerequisites**
-Before starting the assignment, ensure you have the following software installed and properly configured on your machine:
-1. **Python 3.x**:
-   - [Download and Install Python](https://www.python.org/downloads/)
-   - Verify installation:
-     ```bash
-     python3 --version
-     ```
+Real-Time Ride-Sharing Analytics with Spark Structured Streaming
 
-2. **PySpark**:
-   - Install using `pip`:
-     ```bash
-     pip install pyspark
-     ```
+This project builds a real-time data processing pipeline using Apache Spark Structured Streaming. It simulates live ride-sharing trip data via a Python generator streaming JSON messages over a socket connection (localhost:9999).
 
-3. **Faker**:
-   - Install using `pip`:
-     ```bash
-     pip install faker
-     ```
+Setup Requirements
 
----
+Ensure you have the following dependencies installed before execution:
 
-## **Setup Instructions**
+Python 3.x
 
-### **1. Project Structure**
+python3 --version
 
-Ensure your project directory follows the structure below:
 
-```
-ride-sharing-analytics/
-├── outputs/
-│   ├── task_1
-│   |    └── CSV files of task 1.
-|   ├── task_2
-│   |    └── CSV files of task 2.
-|   └── task_3
-│       └── CSV files of task 3.
+PySpark
+
+pip install pyspark
+
+
+Faker (used in the data generator)
+
+pip install faker
+
+
+Java 8+
+
+java -version
+
+Folder Organization
+
+Your working directory will look like this once the scripts run:
+
+L8_Spark_SQL_Streaming/
+│
+├── data_generator.py
 ├── task1.py
 ├── task2.py
 ├── task3.py
-├── data_generator.py
+│
+├── outputs/
+│   ├── task1/
+│   │   ├── row_1_xxx/
+│   │   │   └── part-00000-....csv
+│   │   ├── row_2_xxx/
+│   │   │   └── part-00000-....csv
+│   │   └── ...
+│   │
+│   ├── task2/
+│   │   ├── batch_0/part-00000-....csv
+│   │   ├── batch_1/part-00000-....csv
+│   │   └── ...
+│   │
+│   └── task3/
+│       ├── batch_0/part-00000-....csv
+│       ├── batch_1/part-00000-....csv
+│       └── ...
+│
 └── README.md
-```
 
-- **data_generator.py/**: generates a constant stream of input data of the schema (trip_id, driver_id, distance_km, fare_amount, timestamp)  
-- **outputs/**: CSV files of processed data of each task stored in respective folders.
-- **README.md**: Assignment instructions and guidelines.
-  
----
 
-### **2. Running the Analysis Tasks**
+Note: The checkpoints/ directory is created automatically by Spark and should not be added to GitHub.
 
-You can run the analysis tasks either locally.
+How to Execute
+Step 1 — Start Data Stream
 
-1. **Execute Each Task **: The data_generator.py should be continuosly running on a terminal. open a new terminal to execute each of the tasks.
-   ```bash
-     python data_generator.py
-     python task1.py
-     python task2.py
-     python task3.py
-   ```
+In Terminal 1, activate your virtual environment and run:
 
-2. **Verify the Outputs**:
-   Check the `outputs/` directory for the resulting files:
-   ```bash
-   ls outputs/
-   ```
+python data_generator.py
 
----
 
-## **Overview**
+This script sends one JSON record per second to the socket stream.
 
-In this assignment, we will build a real-time analytics pipeline for a ride-sharing platform using Apache Spark Structured Streaming. we will process streaming data, perform real-time aggregations, and analyze trends over time.
+Step 2 — Run the Spark Tasks
 
-## **Objectives**
+In Terminal 2, execute each task individually (keep generator running):
 
-By the end of this assignment, you should be able to:
+# Task 1 — Parse and write raw streaming data
+python task1.py
 
-1. Task 1: Ingest and parse real-time ride data.
-2. Task 2: Perform real-time aggregations on driver earnings and trip distances.
-3. Task 3: Analyze trends over time using a sliding time window.
+# Task 2 — Aggregate driver statistics
+python task2.py
 
----
+# Task 3 — Compute window-based fare sums
+python task3.py
 
-## **Task 1: Basic Streaming Ingestion and Parsing**
+Project Overview
 
-1. Ingest streaming data from the provided socket (e.g., localhost:9999) using Spark Structured Streaming.
-2. Parse the incoming JSON messages into a Spark DataFrame with proper columns (trip_id, driver_id, distance_km, fare_amount, timestamp).
+The purpose of this project is to practice Spark Structured Streaming concepts by implementing three sequential data-processing tasks on streaming ride data.
 
-## **Instructions:**
-1. Create a Spark session.
-2. Use spark.readStream.format("socket") to read from localhost:9999.
-3. Parse the JSON payload into columns.
-4. Print the parsed data to the console (using .writeStream.format("console")).
+Task	Objective	Output Type
+Task 1	Stream ingestion & JSON parsing	Row-wise CSVs
+Task 2	Aggregations by driver (sum & average)	Batch CSVs
+Task 3	Time-windowed analytics (5-min rolling windows)	Window CSVs
+Task 1 — Ingesting & Parsing Streaming Data
 
----
+Goal:
+Consume streaming JSON data and convert it into structured columns:
+trip_id, driver_id, distance_km, fare_amount, timestamp.
 
-## **Task 2: Real-Time Aggregations (Driver-Level)**
+Approach:
 
-1. Aggregate the data in real time to answer the following questions:
-  • Total fare amount grouped by driver_id.
-  • Average distance (distance_km) grouped by driver_id.
-2. Output these aggregations to the console in real time.
+Input via socket stream (localhost:9999).
 
-## **Instructions:**
-1. Reuse the parsed DataFrame from Task 1.
-2. Group by driver_id and compute:
-3. SUM(fare_amount) as total_fare
-4. AVG(distance_km) as avg_distance
-5. Store the result in csv
+Parse each message using a predefined schema.
 
----
+Write each micro-batch as a separate CSV file (outputs/task1/row_*).
 
-## **Task 3: Windowed Time-Based Analytics**
+Example Output:
 
-1. Convert the timestamp column to a proper TimestampType.
-2. Perform a 5-minute windowed aggregation on fare_amount (sliding by 1 minute and watermarking by 1 minute).
+distance_km,driver_id,fare_amount,timestamp,trip_id
+37.31,74,82.68,2025-10-14 23:22:23,dc98071c-fe04-4cff-a789-592c823cf45f
 
-## **Instructions:**
+Task 2 — Aggregating by Driver
 
-1. Convert the string-based timestamp column to a TimestampType column (e.g., event_time).
-2. Use Spark’s window function to aggregate over a 5-minute window, sliding by 1 minute, for the sum of fare_amount.
-3. Output the windowed results to csv.
+Goal:
+Calculate each driver’s total fare and average trip distance in real-time.
 
----
+Steps:
 
-## 📬 Submission Checklist
+Convert timestamps to Spark’s TimestampType.
 
-- [ ] Python scripts 
-- [ ] Output files in the `outputs/` directory  
-- [ ] Completed `README.md`  
-- [ ] Commit everything to GitHub Classroom  
-- [ ] Submit your GitHub repo link on canvas
+Group by driver_id and compute:
 
----
+SUM(fare_amount) → total_fare
 
+AVG(distance_km) → avg_distance
+
+Write each batch’s output to outputs/task2/batch_*.
+
+Sample Output:
+
+driver_id,total_fare,avg_distance
+65,118.57,19.67
+27,99.24,40.29
+91,93.18,13.12
+
+Task 3 — Time-Based Windowed Aggregations
+
+Goal:
+Compute rolling sums of total fare collected within a 5-minute window, sliding by 1 minute with a 1-minute watermark.
+
+Process:
+
+Convert timestamp to event_time.
+
+Define windowing logic with groupBy(window(event_time, "5 minutes", "1 minute")).
+
+Aggregate SUM(fare_amount) as sum_fare.
+
+Write each micro-batch to outputs/task3/batch_*.
+
+Sample Output:
+
+window_start,window_end,sum_fare
+2025-10-15T22:42:00.000Z,2025-10-15T22:47:00.000Z,19521.0
+
+Verify Outputs
+
+View all generated CSVs:
+
+ls -R outputs
+
+
+Preview top lines:
+
+head outputs/task1/*/part-*.csv
+head outputs/task2/batch_*/part-*.csv
+head outputs/task3/batch_*/part-*.csv
+
+🧹 Cleanup (Optional)
+
+If you need to restart or re-run tasks:
+
+rm -rf checkpoints/task1 checkpoints/task2 checkpoints/task3
+rm -rf outputs/task1 outputs/task2 outputs/task3
+
+
+✅ Result:
+All three tasks together demonstrate a complete Spark Streaming workflow — from real-time ingestion to stateful aggregations and time-windowed trend analytics.
