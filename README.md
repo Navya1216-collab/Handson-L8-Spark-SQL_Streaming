@@ -7,19 +7,19 @@ Setup Requirements
 Ensure you have the following dependencies installed before execution:
 
 Python 3.x
-
+```
 python3 --version
-
+```
 
 PySpark
-
+```
 pip install pyspark
-
+```
 
 Faker (used in the data generator)
-
+```
 pip install faker
-
+```
 
 Java 8+
 
@@ -74,14 +74,17 @@ Step 2 — Run the Spark Tasks
 In Terminal 2, execute each task individually (keep generator running):
 
 # Task 1 — Parse and write raw streaming data
+```
 python task1.py
-
+```
 # Task 2 — Aggregate driver statistics
+```
 python task2.py
-
+```
 # Task 3 — Compute window-based fare sums
+```
 python task3.py
-
+```
 Project Overview
 
 The purpose of this project is to practice Spark Structured Streaming concepts by implementing three sequential data-processing tasks on streaming ride data.
